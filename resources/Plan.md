@@ -33,3 +33,6 @@ rotations: https://www.desmos.com/calculator/vmhqzac41d
 use processing `Image.get()` to grab vertical columns of pixels to render textures
 
 put things to render in a list then sort the list by distance from player (average z coord)?
+
+Intersection formula from wikipedia
+https://www.desmos.com/calculator/xbw7wuzdpp
