@@ -5,7 +5,7 @@ public class Player extends Cam {
 	private Map m;
 
 	private static final float v = 12.0f; // units per second
-	private static final float vEase = 0.1f; // lerp interval, must be between 0.0f and 1.0f
+	private static final float vEase = 0.2f; // lerp interval, must be between 0.0f and 1.0f
 	
 	public Player(int fovVal, int wVal, int hVal, Map mapVal) {
 		super(fovVal, wVal, hVal);

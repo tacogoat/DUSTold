@@ -23,9 +23,36 @@ void setup() {
 void draw() {
   background(20);
   stroke(255);
-  strokeWeight(4);
-  drawWireframeFake();
+  strokeWeight(2);
+  drawWireframe();
   you.move(passInput());
+}
+
+void drawWireframe() {
+  for (int i = 0; i < m.getLength(); i++) {
+    Sector sect = m.getSector(i);
+    for (int j = 0; j < sect.getLength(); j++) {
+      Point p1 = sect.getPoint(j);
+      Point p2;
+      if (j == sect.getLength() - 1) {
+        p2 = sect.getPoint(0);
+      } else {
+        p2 = sect.getPoint(j + 1);
+      }
+
+      // if one of the points is null, find out where the line intersects with the screen
+      // if both of the points are null, check if the line intersects the screen at two points
+
+      Point floorP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), true);
+      Point floorP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), true);
+      Point ceilP1 = you.onScreenPos(p1.getX(), sect.getCeil(), p1.getY(), true);
+      Point ceilP2 = you.onScreenPos(p2.getX(), sect.getCeil(), p1.getY(), true);
+
+      line(floorP1.getX(), floorP1.getY(), floorP2.getX(), floorP2.getY());
+      line(ceilP1.getX(), ceilP1.getY(), ceilP2.getX(), ceilP2.getY());
+      line(floorP1.getX(), floorP1.getY(), ceilP1.getX(), ceilP1.getY());
+    }
+  }
 }
 
 void drawWireframeFake() {
@@ -71,37 +98,4 @@ void keyReleased() {
 
 Point passInput() {
   return new Point(left + right, forward + back);
-}
-
-void drawWireframe() {
-  for (int i = 0; i < m.getLength(); i++) {
-    Sector sect = m.getSector(i);
-    for (int j = 0; j < sect.getLength() - 1; j++) {
-      Point p1 = sect.getPoint(i);
-      Point p2 = sect.getPoint(i + 1);
-      // y value of points is actually z depth
-
-      Point realP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), false);
-      if (realP1 == null) {
-        Point[] test = sect.getAdjacentPoints(j);
-        Point t1 = test[0];
-        Point t2 = test[1];
-        if (you.onScreenPos(t1.getX(), sect.getFloor(), t1.getY(), false) != null || you.onScreenPos(t2.getX(), sect.getFloor(), t2.getY(), false) != null) {
-          realP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), true);
-        }
-      }
-
-      Point realP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), false);
-      if (realP2 == null) {
-        Point[] test = sect.getAdjacentPoints(j);
-        Point t1 = test[0];
-        Point t2 = test[1];
-        if (you.onScreenPos(t1.getX(), sect.getFloor(), t1.getY(), false) != null || you.onScreenPos(t2.getX(), sect.getFloor(), t2.getY(), false) != null) {
-          realP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), true);
-        }
-      }
-
-      if (realP1 != null && realP1 != null) line(realP1.getX(), realP1.getY(), realP2.getX(), realP2.getY());
-    }
-  }
 }
