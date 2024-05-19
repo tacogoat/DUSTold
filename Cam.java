@@ -18,18 +18,18 @@ public class Cam {
 		this.h = hVal;
 		this.dist = screenDist();
 		this.distU = Units.px2u(this.dist);
-		this.camHeight = 2.0f; // should be 5.0f
-	}
+		this.camHeight = 2.0f;
+  }
 
-	public float getScreenDist() {
-		return this.dist;
-	}
+	public float getScreenDist() {return this.dist;}
+  public float getCamHeight() {return this.camHeight;}
+  public void setCamHeight(float h) {this.camHeight = h;}
 
 	public Point onScreenPos(float x, float y, float z, boolean force) {
 		// if force is true, this will return a value regardless of whether the point is on or off screen
 		// when rendering: if point is null, check if adjacent to point on screen
 		// if point is adjacent, get position with force = true
-		if (z < this.distU && !force) {
+		if (z < /* this.distU */ 0.0f && !force) {
 			return null;
 		}
 		else {
@@ -39,11 +39,11 @@ public class Cam {
 			float xPos = this.dist * (x / z);
 			float yPos = this.dist * (y / z);
 			if ((Math.abs(xPos) > this.w / 2.0f || Math.abs(yPos) > this.h / 2.0f) && !force) {
-				return null;
-			} else {
+				// return null;
+			} // else {
 				Point p = new Point(xPos, yPos);
 				return Point.makeStandard(p, this.w, this.h);
-			}
+			// }
 		}
 	}
 }

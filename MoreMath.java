@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+
 public class MoreMath {
 	public static float deg2rad(float deg) {
 		return (float) Math.PI * (deg / 180.0f);
@@ -25,5 +28,5 @@ public class MoreMath {
     } else {
       return null;
     }
-  }
+  } 
 }

@@ -1,5 +1,10 @@
+import java.util.ArrayList;
+
 import java.awt.Robot;
 import java.awt.AWTException;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 Player you;
 Map m;
@@ -11,42 +16,58 @@ int back;
 int left;
 int right;
 
-float mouseSens = 0.1;
+float mouseSens = 0.2;
 
-PrintWriter testWriter;
+PImage bird;
 
 void setup() {
-  fullScreen();
-  m = new Map("C:\\Users\\335863\\Documents\\Processing\\projects\\DUST\\resources\\maps\\map.txt");
-  you = new Player(110, width, height, m);
+  fullScreen(P2D);
 
+  // generate and initialize map
+  String[] testMapArr = loadStrings("maps/map.txt");
+  ArrayList<String> testMap = Map.parseStringArr(testMapArr);
+  m = new Map(testMap);
   m.generate();
   m.init();
   println(m);
+
+  you = new Player(110, width, height, m);
+  bird = loadImage("bird.jpg");
   
+  // lock mouse to center of screen
   try {
     r = new Robot();
   } catch (AWTException e) {
     e.printStackTrace();
-  }
-  
+  } 
   r.mouseMove(width / 2, height / 2);
-  noCursor();
+  noCursor(); 
 }
 
 void draw() {
   background(20);
-  stroke(255);
-  strokeWeight(2);
-  drawWireframe();
+
+  // draw sky
+  fill(25); strokeWeight(0);
+  rect(0, 0, width, height / 2);
+
+  // draw map
+  // stroke(255); strokeWeight(2);
+  // drawWireframe();
+  drawTextures(bird);
+
+  // handle movement
   you.move(passInput());
+  you.bob();
   
+  // handle mouse input, lock mouse to center of screen
   float lookMag = (mouseX - width / 2) * mouseSens;
   you.look(lookMag);
   r.mouseMove(width / 2, height / 2);
   
-  strokeWeight(8);
-  line(width / 2, height / 2, width / 2, height / 2);
+  // draw crosshair
+  fill(255);
+  circle(width / 2, height / 2, 3);
 }
 
 void drawWireframe() {
@@ -64,41 +85,71 @@ void drawWireframe() {
       // if one of the points is null, find out where the line intersects with the screen
       // if both of the points are null, check if the line intersects the screen at two points
 
-      Point floorP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), true);
-      Point floorP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), true);
-      Point ceilP1 = you.onScreenPos(p1.getX(), sect.getCeil(), p1.getY(), true);
-      Point ceilP2 = you.onScreenPos(p2.getX(), sect.getCeil(), p2.getY(), true);
+      Point floorP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), false);
+      Point floorP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), false);
+      Point ceilP1 = you.onScreenPos(p1.getX(), sect.getCeil(), p1.getY(), false);
+      Point ceilP2 = you.onScreenPos(p2.getX(), sect.getCeil(), p2.getY(), false);
 
-      line(floorP1.getX(), floorP1.getY(), floorP2.getX(), floorP2.getY());
-      line(ceilP1.getX(), ceilP1.getY(), ceilP2.getX(), ceilP2.getY());
-      line(floorP1.getX(), floorP1.getY(), ceilP1.getX(), ceilP1.getY());
+      if (floorP1 != null && floorP2 != null) {
+        line(floorP1.getX(), floorP1.getY(), floorP2.getX(), floorP2.getY());
+      }
+      if (ceilP1 != null && ceilP2 != null) {
+        line(ceilP1.getX(), ceilP1.getY(), ceilP2.getX(), ceilP2.getY());
+      }
+      if (floorP1 != null && ceilP1 != null) {
+        line(floorP1.getX(), floorP1.getY(), ceilP1.getX(), ceilP1.getY());
+      }
     }
   }
 }
 
-void drawWireframeFake() {
+ArrayList<Point> pushTextures() {
+  ArrayList<float[]> zList = new ArrayList<float[]>();
   for (int i = 0; i < m.getLength(); i++) {
     Sector sect = m.getSector(i);
-    for (int j = 0; j < sect.getLength() - 1; j++) {
+    for (int j = 0; j < sect.getLength(); j++) {
       Point p1 = sect.getPoint(j);
-      Point p2 = sect.getPoint(j + 1);
-      // y value of points is actually z depth
-
-      Point realP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), true);
-
-      Point realP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), true);
-
-      if (realP1 != null && realP1 != null) line(realP1.getX(), realP1.getY(), realP2.getX(), realP2.getY());
+      Point p2;
+      if (j == sect.getLength() - 1) {
+        p2 = sect.getPoint(0);
+      } else {
+        p2 = sect.getPoint(j + 1);
+      }
     }
-    Point p1 = sect.getPoint(sect.getLength() - 1);
-    Point p2 = sect.getPoint(0);
-    // y value of points is actually z depth
+  }
+  return new ArrayList<Point>();
+}
 
-    Point realP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), true);
+void drawTextures(PImage img) {
+  for (int i = 0; i < m.getLength(); i++) {
+    Sector sect = m.getSector(i);
+    for (int j = 0; j < sect.getLength(); j++) {
+      Point p1 = sect.getPoint(j);
+      Point p2;
+      if (j == sect.getLength() - 1) {
+        p2 = sect.getPoint(0);
+      } else {
+        p2 = sect.getPoint(j + 1);
+      }
 
-    Point realP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), true);
+      // if one of the points is null, find out where the line intersects with the screen
+      // if both of the points are null, check if the line intersects the screen at two points
 
-    if (realP1 != null && realP1 != null) line(realP1.getX(), realP1.getY(), realP2.getX(), realP2.getY());
+      Point floorP1 = you.onScreenPos(p1.getX(), sect.getFloor(), p1.getY(), false);
+      Point floorP2 = you.onScreenPos(p2.getX(), sect.getFloor(), p2.getY(), false);
+      Point ceilP1 = you.onScreenPos(p1.getX(), sect.getCeil(), p1.getY(), false);
+      Point ceilP2 = you.onScreenPos(p2.getX(), sect.getCeil(), p2.getY(), false);
+
+      if (floorP1 != null && floorP2 != null && ceilP1 != null && ceilP2 != null) {
+        beginShape();
+        texture(bird);
+        vertex(ceilP1.getX(), ceilP1.getY(), 0, 0);
+        vertex(ceilP2.getX(), ceilP2.getY(), img.width, 0);
+        vertex(floorP2.getX(), floorP2.getY(), img.width, img.height);
+        vertex(floorP1.getX(), floorP1.getY(), 0, img.height);
+        endShape();
+      }
+    }
   }
 }
 
